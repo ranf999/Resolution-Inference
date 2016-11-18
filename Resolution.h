@@ -30,11 +30,11 @@ class Resolution
 private:
 	//vector<Clause> KB;
 public:
-	bool doResolution(Knowledge KB,Clause query);
+	bool doResolution(vector<Clause*> KB,Clause* query);
 	bool hasEmpty(vector<Clause*>& clauses);
 
-	bool equals(Clause* A, Clause* B)
-	vector<Clause*> disjunct(vector<Clause*> clausesA,vector<Clause*> clausesB)
+	bool equals(Clause* A, Clause* B);
+	vector<Clause*> disjunct(vector<Clause*> clausesA,vector<Clause*> clausesB);
 };
 
 

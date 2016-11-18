@@ -1,6 +1,6 @@
 #include "Resolution.h"
 
-bool Resolution::doResolution(vector<Clause*> KB, Clause*& query)
+bool Resolution::doResolution(vector<Clause*> KB, Clause* query)
 { 
 	KB.push_back(query->negate());
 	vector<Clause*> newClauses;
@@ -33,7 +33,7 @@ bool Resolution::hasEmpty(vector<Clause*>& clauses)
 	return false;
 }
 
-
+ 
 
 bool Resolution::equals(Clause* A, Clause* B)
 {
@@ -65,27 +65,41 @@ bool Resolution::equals(Clause* A, Clause* B)
 	}
 }
 
-vector<Clause*> Resolution::disjunct(vector<Clause*> clausesA,vector<Clause*> clausesB)
+
+bool belongTo(vector<Clause*> newClauses, vector<Clause*> KB)
 {
-	vector<Clause*> mixed;
-	for(auto clauseA:clausesA)
+   for(auto clause : newClauses)
+   { 
+	   bool find = false;
+	   for(auto clauseInKB : KB)
+	   {
+		   if(equals(clause, clauseInKB))
+				find = true;
+	   }
+       if(find == false)
+		   return false;
+   }
+   return true;
+}
+
+
+vector<Clause* > Resolution::disjunct(vector<Clause* > clausesA, vector<Clause* > clausesB)
+{
+	vector<Clause* > mixed;
+	for(auto clauseA : clausesA)
 	{
 		mixed.push_back(clauseA);
 		for(auto it = clausesB.begin(); it != clausesB.end(); it++)
-		{ 
-			if(equals(clauseA,(*it))
-			{
+			if(equals(clauseA,(*it)))
 				it = clausesB.erase(it);
-			}
-		}
 	}
-	for(auto clauseB:clausesB)
+	for(auto clauseB : clausesB)
+	{
 		mixed.push_back(clauseB);
+	}
 	return mixed;
 }
-agasggdagasga
-gagagagsgsggaggg
-sfagagga
+
 
 
 
