@@ -10,6 +10,7 @@ private:
 	vector<string> variable;
 	bool positive;
 public:
+	Predicate(string name, vector<string> variable, bool positive);
 	string getName();
 	void setName(string name);
 	vector<string> getVariable();

@@ -7,10 +7,13 @@
 class Clause
 {
 private:
-	vector<Predicate> clauseList;
+	vector<Predicate*> clausevector;
 public:
-	void setClauseList(vector<Predicate> clauseList);
-	vector<Predicate> getClauseList;
-}
+	Clause(vector<Predicate*>& clausevector);
+	void setClausevector(vector<Predicate*>& clausevector);
+	vector<Predicate*> getClausevector();
+	void negate();
+
+};
 
 #endif

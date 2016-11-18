@@ -1,5 +1,12 @@
 #include "Predicate.h"
 
+Predicate(string name, vector<string> variable, bool positive)
+{
+	this->name = name;
+	this->variable = variable;
+	this-> positive = positive;
+}
+
 string Predicate::getName()
 {
 	return this->name;

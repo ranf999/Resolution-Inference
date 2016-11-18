@@ -1,11 +1,19 @@
 #include "Clause.h"
 
-vector<Predicate> Clause::getClauseList()
+vector<Predicate*> Clause::getClausevector()
 {
-	return this->clauseList;
+	return this->clausevector;
 }
 
-void Clause::setClauseList(vector<Predicate> clauseList)
+void Clause::setClausevector(vector<Predicate*>& clausevector)
 {
-	this->clauseList = clauseList;
+	this->clausevector = clausevector;
 }
+
+void Clause::negate()
+{
+	for(auto pre:clausevector)
+		pre->setPositive(false);
+}
+
+
