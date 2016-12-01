@@ -9,9 +9,12 @@ class Clause
 private:
 	vector<Predicate*> clausevector;
 public:
-	Clause(vector<Predicate*>& clausevector);
+	Clause() {};
+	Clause(vector<Predicate*> clausevector);
 	void setClausevector(vector<Predicate*>& clausevector);
 	vector<Predicate*> getClausevector();
+	void addPredicate(Predicate* pre);
+	void clear();
 	void negate();
 
 };

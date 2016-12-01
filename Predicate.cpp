@@ -1,6 +1,6 @@
 #include "Predicate.h"
 
-Predicate(string name, vector<string> variable, bool positive)
+Predicate::Predicate(string name, vector<string> variable, bool positive)
 {
 	this->name = name;
 	this->variable = variable;
@@ -27,7 +27,7 @@ void Predicate::setPositive(bool positive)
 	this->positive = positive;
 }
 
-bool isPositive()
+bool Predicate::isPositive()
 {
 	return this->positive;
 }
