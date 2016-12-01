@@ -1,23 +1,38 @@
 
 #include "Resolution.h"
 
-bool Resolution::doResolution(vector<Clause* > KB, Clause* query)
+bool Resolution::doResolution(vector<Clause* > KB, Clause* query, chrono::system_clock::time_point start)
 {  
 	query->negate();
 	KB.push_back(query);
-	vector<Clause*> newClauses;
+	unordered_map<int, int> hasUsed;
+	unordered_map<int, int>::iterator it;
 	while(1)
  	{
+		vector<Clause*> newClauses;
 		int size = KB.size();
 		vector<Clause*> resolvents;
 		for(int i = 0; i < size; i++)
 			for(int j = i + 1; j < size; j++)
  			{
+				auto end = chrono::system_clock::now();
+				auto duration = chrono::duration_cast<chrono::seconds>(end - start);
+				if (duration.count() >= 27) return false;
+				it = hasUsed.find(i);
+				if (it != hasUsed.end() && j <= hasUsed[i])
+					continue;
 				Clause* result = resolve(KB[i], KB[j]);
-				if(result->getClausevector().size()!=0)
+				if (hasUsed.find(i) == hasUsed.end())
+					hasUsed.emplace(i, j);
+				else
+					hasUsed[i] = j;
+				if (result->getClausevector().size() != 0)
+				{
 					resolvents.push_back(result);
-				if(hasEmpty(resolvents))
-					return true;		
+					if (hasEmpty(result))
+						return true;
+				}
+				
 				newClauses = disjunct(newClauses, resolvents);
 			}
 		if (belongTo(newClauses, KB))
@@ -27,14 +42,11 @@ bool Resolution::doResolution(vector<Clause* > KB, Clause* query)
 	return false;
 } 
 
-bool Resolution::hasEmpty(vector<Clause*>& clauses)
+bool Resolution::hasEmpty(Clause* clause)
 {
-	for(auto clause:clauses)
-	{
 		vector<Predicate*> preVector = clause->getClausevector();
-		if(preVector.size()==0)
+		if(preVector[0]->name.compare("empty")==0)
 			return true;
-	}
 	return false;
 }
 
@@ -60,19 +72,21 @@ bool predicateCmp(Predicate* a, Predicate* b)
 }
 
 bool Resolution::equals(Clause* A, Clause* B)
-{
+{ 
 	vector<Predicate*> preVectorA = A->getClausevector();
 	vector<Predicate*> preVectorB = B->getClausevector();
 	if(preVectorA.size() != preVectorB.size())
 		return false;
 	else
-	{
+	{ 
 		sort(preVectorA.begin(), preVectorA.end(), predicateCmp);
 		sort(preVectorB.begin(), preVectorB.end(), predicateCmp);
 		//unordered_map<string,int> A,B;
 		int n = preVectorA.size();
 		for(int i = 0; i < n; i++)
 		{
+			if (preVectorA[i]->positive != preVectorB[i]->positive)
+				return false;
 			if(preVectorA[i]->getName().compare(preVectorB[i]->getName())==0)
 			{
 				int varSize = preVectorA[i]->getVariable().size();
@@ -149,9 +163,11 @@ Clause* Resolution::resolve(Clause* A, Clause* B)
 	int sizeB = preVectorB.size();
 	int n = sizeA < sizeB ? sizeA : sizeB;//????
 	bool canResolve = false;
+	vector<unordered_map<string, string> > replace;
 	//judge whether can be resolve
 	for (int i = 0; i < preVectorA.size(); i++)
 	{
+		bool haveResolution = false;
 		//if (preVectorA.size() == 0) break;
 		for (int j = 0; j < preVectorB.size(); j++)
 		{
@@ -159,6 +175,7 @@ Clause* Resolution::resolve(Clause* A, Clause* B)
 			Predicate* preB = new Predicate();
 			preA = preVectorA[i];
 			preB = preVectorB[j];
+			bool canUnify = false;
 			if (preA->getName().compare(preB->getName()) == 0
 				&& ((preA->isPositive() == true && preB->isPositive() == false) || (preA->isPositive() == false && preB->isPositive() == true)))
 			{
@@ -167,12 +184,31 @@ Clause* Resolution::resolve(Clause* A, Clause* B)
 				bool same = true;
 				for(int m = 0; m < preA->variable.size(); m++)
 				{
-					if(preA->variable[m].compare(preB->variable[m])!=0)
+					if (preA->variable[m].compare(preB->variable[m]) != 0)
+					{
 						same = false;
+						break;
+					}
+						
 				}
+				if (same == true)
+				{
+					bool haveUpper = false;
+					for (int m = 0; m < preA->variable.size(); m++)
+					{
+						if (preA->variable[m][0] >= 'A' && preA->variable[m][0] <= 'Z')
+							haveUpper = true;
+					}
+					if (haveUpper == false)
+					{
+						same = false;
+					}
+				}
+				
 			
 				if(same == true)
 				{
+					haveResolution = true;
 					canResolve = true;
 					preVectorA.erase(preVectorA.begin() + i);
 					i--;
@@ -180,11 +216,12 @@ Clause* Resolution::resolve(Clause* A, Clause* B)
 					j--;
 					break;
 				}
-				unordered_map<string,string> replace = substitution(preA, preB);
-				if(replace.size() > 0)
+				replace = substitution(preA, preB);
+				if(!(replace[0].empty()&&replace[1].empty()))
 					canUnify = true;
 				if (canUnify == true)
 				{
+					haveResolution = true;
 					canResolve = true;
 					preVectorA.erase(preVectorA.begin() + i);
 					i--;
@@ -194,21 +231,44 @@ Clause* Resolution::resolve(Clause* A, Clause* B)
 				}
 			}
 		}
+		if (haveResolution == true)
+			break;
 	}
 	if (canResolve == true) {
-		vector<Predicate*> newVectorPredicate;
-		for (auto preB : preVectorB)
-			preVectorA.push_back(preB);
-		Clause* res = new Clause();
-		for(int i = 0; i < preVectorA.size(); i++)
+		//???
+		vector<Predicate*> newVectorA;
+		vector<Predicate*> newVectorB;
+		if (preVectorA.size() == 0 && preVectorB.size() == 0)
 		{
-			Predicate* preInA = new Predicate(preVectorA->name, preVectorA->variable, preVectorA->positive);
-			newVectorPredicate.push_back(preInA);
+			Clause* res = new Clause();
+			vector<string> vars;
+			Predicate* empty = new Predicate("empty",vars, true);
+			newVectorA.push_back(empty);
+			res->setClausevector(newVectorA);
+			return res;
 		}
+		for (int i = 0; i < preVectorA.size(); i++)
+		{
+			Predicate* preInA = new Predicate(preVectorA[i]->name, preVectorA[i]->variable, preVectorA[i]->positive);
+			newVectorA.push_back(preInA);
+		}
+		for (int i = 0; i < preVectorB.size(); i++)
+		{
+			Predicate* preInB = new Predicate(preVectorB[i]->name, preVectorB[i]->variable, preVectorB[i]->positive);
+			newVectorB.push_back(preInB);
+		}
+
+		if(!replace.empty())
+			unification(newVectorA,newVectorB,replace);
+		for (auto preB : newVectorB)
+			newVectorA.push_back(preB);
+		Clause* res = new Clause();
+		
 		//unification
-		//
-		//
-		res->setClausevector(newVectorPredicate);
+		//factoring
+		//factoring(newVectorPredicate);
+		
+		res->setClausevector(newVectorA);
 		return res;
 	}
 		Clause* res = new Clause();
@@ -267,27 +327,121 @@ bool Resolution::unify(Predicate* preA, Predicate* preB, vector<Predicate* >& pr
 	return canUnify;
 }
 
-unordered_map<string,string> Resolution::substitution(Predicate* preA, Predicate* preB)
-{
+vector<unordered_map<string,string> > Resolution::substitution(Predicate* preA, Predicate* preB)
+{   
 	bool canUnify = false;
 	vector<string> argA = preA->getVariable();
 	vector<string> argB = preB->getVariable();
 	bool hasVal = false;
-	unordered_map<string,string> replace;
+	unordered_map<string,string> replaceA;
+	unordered_map<string,string> replaceB;
+	vector<unordered_map<string,string> > mapVector(2);
+	//worth unify
 	for(int i = 0; i < argA.size();i++)
-	{
+	{ 
+		if((argA[i][0] >= 'A' && argA[i][0] <= 'Z')&&(argB[i][0] >= 'a'&&argB[i][0] <= 'z'))
+			hasVal = true;
+		if ((argB[i][0] >= 'A' && argB[i][0] <= 'Z') && (argA[i][0] >= 'a'&&argA[i][0] <= 'z'))
+			hasVal = true;
+	}
+	if(hasVal==false) return mapVector;
+	unordered_map<string,int> hasHash;
+// subusititution generate
+	for(int i = 0; i < argA.size();i++)
+	{	
+		if((argA[i][0] >= 'A' && argA[i][0] <= 'Z')&&(argB[i][0] >= 'A'&&argB[i][0] <= 'Z')&&(argA[i].compare(argB[i])!=0))
+		{
+				replaceA.clear();
+				replaceB.clear();
+				mapVector.push_back(replaceA);
+				mapVector.push_back(replaceB);
+				return mapVector;
+
+		}
 		if((argA[i][0] >= 'A' && argA[i][0] <= 'Z')&&(argB[i][0] >= 'a'&&argB[i][0] <= 'z'))
 		{
+			 unordered_map<string,string>::const_iterator got = replaceB.find(argB[i]);
+			 if(got == replaceB.end())
+			 {
+			 	replaceB.emplace(argB[i],argA[i]);
+			 }
+			 else
+			 {
+				replaceA.clear();
+				replaceB.clear();
+				mapVector.push_back(replaceA);
+				mapVector.push_back(replaceB);
+				return mapVector;
+			 }
 			
 		}
 		else if ((argB[i][0] >= 'A' && argB[i][0] <= 'Z') && (argA[i][0] >= 'a'&&argA[i][0] <= 'z'))
-		{
+		{ 
+			unordered_map<string,string>::const_iterator got = replaceA.find(argA[i]);
+			if(got == replaceA.end())
+			{
+				replaceA.emplace(argA[i],argB[i]);
+			}
+			else
+		 	{
+				replaceA.clear();
+				replaceB.clear();
+				mapVector.push_back(replaceA);
+				mapVector.push_back(replaceB);
+				return mapVector;
+
+			}
 
 		}
+		else if((argA[i][0] >= 'a' && argA[i][0] <= 'z')&&(argB[i][0] >= 'a'&&argB[i][0] <= 'z'))
+		{	
+			unordered_map<string,string>::const_iterator gotA = replaceA.find(argA[i]);
+			unordered_map<string,string>::const_iterator gotB = replaceB.find(argB[i]);
+			if(gotA == replaceA.end())
+			{
+				replaceA.emplace(argA[i],argB[i]);
+			}
+			else if(gotB == replaceB.end())
+			{
+				replaceB.emplace(argB[i],argA[i]);
+			}
+		}
 	}
-	
+	mapVector[0] = replaceA;
+	mapVector[1] = replaceB;
 
+	return mapVector;
 }
 
+void Resolution::unification(vector<Predicate*>& preA, vector<Predicate*>& preB, vector<unordered_map<string,string> > replace)
+{
+	unordered_map<string,string>::iterator it;
+	for(auto pre : preA)
+	{
+		for(int i = 0; i < pre->variable.size(); i++)
+		{
+			it = replace[0].find(pre->variable[i]);
+			if(it != replace[0].end())
+			{
+				pre->variable[i] = replace[0][pre->variable[i]];
+			}
+		}
+	}
+
+	for(auto pre : preB)
+	{
+		for(int i = 0; i < pre->variable.size(); i++)
+		{
+			it = replace[1].find(pre->variable[i]);
+			if(it != replace[1].end())
+			{
+				pre->variable[i] = replace[1][pre->variable[i]];
+			}
+		}
+
+	}
+
+
+}
 
 

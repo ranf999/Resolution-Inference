@@ -209,7 +209,7 @@ void Scan::deleteDoubleNot(TreeNode* syntaxTree)
 	{
 		if (syntaxTree->child[0] && syntaxTree->child[0]->optr == NOT && syntaxTree->child[0]->child[0] && syntaxTree->child[0]->child[0]->optr == NOT)
 			syntaxTree->child[0] = syntaxTree->child[0]->child[0]->child[0];
-		if (syntaxTree->child[1] && syntaxTree->child[1]->optr == NOT && syntaxTree->child[1]->child[0] && syntaxTree->child[0]->child[0]->optr == NOT)
+		if (syntaxTree->child[1] && syntaxTree->child[1]->optr == NOT && syntaxTree->child[1]->child[0] && syntaxTree->child[1]->child[0]->optr == NOT)
 			syntaxTree->child[1] = syntaxTree->child[1]->child[0]->child[0];
 		deleteDoubleNot(syntaxTree->child[0]);
 		deleteDoubleNot(syntaxTree->child[1]);

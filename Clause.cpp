@@ -18,7 +18,7 @@ void Clause::setClausevector(vector<Predicate*>& clausevector)
 void Clause::negate()
 {
 	for(auto pre:clausevector)
-		pre->setPositive(false);
+		pre->positive = (pre->positive+1)%2;
 }
 
 void Clause::addPredicate(Predicate* pre)

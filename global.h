@@ -20,6 +20,19 @@
 #include<string>
 #include<algorithm>
 #include<list>
+#include <ctime>
+#include <ratio>
+#include <chrono>
 using namespace std;
+//using namespace chrono;
+
+class Timer
+{
+public:
+	chrono::system_clock::time_point start;
+};
+
+//chrono::system_clock::time_point start;
+
 
 #endif

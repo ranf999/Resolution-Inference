@@ -18,13 +18,25 @@ int main()
 	KB = scanner.getKB(fileStr);
 	Resolution resolution;
 	vector<bool> result;
+	vector<string> output;
+	Timer timer;
 	for (int i = 0; i < query.size(); i++)
 	{
-		bool res = resolution.doResolution(KB, query[i]);
+		timer.start = chrono::system_clock::now();
+		bool res = resolution.doResolution(KB, query[i], timer.start);
 		result.push_back(res);
 	}
 	for (auto res : result)
+	{
 		cout << res << endl;
+		if (res == true)
+			output.push_back("TRUE");
+		else
+			output.push_back("FALSE");
+	}
+		
+
+	file.writeFile("output.txt", output);
 	system("PAUSE");
 	return 0;
 }
