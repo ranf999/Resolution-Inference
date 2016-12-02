@@ -6,6 +6,9 @@
 #include "Resolution.h"
 #include "stdlib.h"
 
+
+
+
 int main()
 {
 	FileUtil file;
@@ -16,6 +19,9 @@ int main()
 	vector<Clause*> query;
 	query = scanner.getQuery(fileStr);
 	KB = scanner.getKB(fileStr);
+
+
+
 	Resolution resolution;
 	vector<bool> result;
 	vector<string> output;

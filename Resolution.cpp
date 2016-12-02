@@ -17,7 +17,7 @@ bool Resolution::doResolution(vector<Clause* > KB, Clause* query, chrono::system
  			{
 				auto end = chrono::system_clock::now();
 				auto duration = chrono::duration_cast<chrono::seconds>(end - start);
-				if (duration.count() >= 27) return false;
+				if (duration.count() >= 29) return false;
 				it = hasUsed.find(i);
 				if (it != hasUsed.end() && j <= hasUsed[i])
 					continue;
@@ -71,6 +71,7 @@ bool predicateCmp(Predicate* a, Predicate* b)
 	return false;
 }
 
+
 bool Resolution::equals(Clause* A, Clause* B)
 { 
 	vector<Predicate*> preVectorA = A->getClausevector();
@@ -110,7 +111,7 @@ bool Resolution::belongTo(vector<Clause*> newClauses, vector<Clause*> KB)
 	   bool find = false;
 	   for(auto clauseInKB : KB)
 	   {
-		   if(equals(clause, clauseInKB))
+		   if(clause->equals(clauseInKB))
 				find = true;
 	   }
        if(find == false)
@@ -133,7 +134,8 @@ vector<Clause* > Resolution::disjunct(vector<Clause* > clausesA, vector<Clause* 
 				it--;
 				isbegin = false;
 			}
-			if (equals(clauseA, (*it))) {
+
+			if (clauseA->equals((*it))) {
 				it = clausesB.erase(it);
 				if (it == clausesB.begin())
 					isbegin = true;
@@ -155,81 +157,91 @@ Clause* Resolution::resolve(Clause* A, Clause* B)
 {
 	vector<Predicate*> preVectorA = A->getClausevector();
 	vector<Predicate*> preVectorB = B->getClausevector();
-	sort(preVectorA.begin(), preVectorA.end(), predicateCmp);
-	sort(preVectorB.begin(), preVectorB.end(), predicateCmp);
-	A->setClausevector(preVectorA);
-	B->setClausevector(preVectorB);
+	//sort(preVectorA.begin(), preVectorA.end(), predicateCmp);
+	//sort(preVectorB.begin(), preVectorB.end(), predicateCmp);
+	//A->setClausevector(preVectorA);
+	//B->setClausevector(preVectorB);
 	int sizeA = preVectorA.size();
 	int sizeB = preVectorB.size();
-	int n = sizeA < sizeB ? sizeA : sizeB;//????
+	//int n = sizeA < sizeB ? sizeA : sizeB;//????
 	bool canResolve = false;
 	vector<unordered_map<string, string> > replace;
 	//judge whether can be resolve
 	for (int i = 0; i < preVectorA.size(); i++)
 	{
 		bool haveResolution = false;
+		Predicate* preA = new Predicate();
+		preA = preVectorA[i];
 		//if (preVectorA.size() == 0) break;
-		for (int j = 0; j < preVectorB.size(); j++)
+		//for (int j = 0; j < preVectorB.size(); j++)
+		if(B->predicateMap.find(preA->name)!= B->predicateMap.end())
 		{
-			Predicate* preA = new Predicate();
-			Predicate* preB = new Predicate();
-			preA = preVectorA[i];
-			preB = preVectorB[j];
-			bool canUnify = false;
-			if (preA->getName().compare(preB->getName()) == 0
-				&& ((preA->isPositive() == true && preB->isPositive() == false) || (preA->isPositive() == false && preB->isPositive() == true)))
+			vector<int> preNo = B->predicateMap[preA->name];
+			for (auto j : preNo)
 			{
-				//have conflicts, judge whether they can be unified
-				//if two predicates are all the same
-				bool same = true;
-				for(int m = 0; m < preA->variable.size(); m++)
+				Predicate* preB = new Predicate();
+				preB = preVectorB[j];
+				bool canUnify = false;
+				//if (preA->getName().compare(preB->getName()) == 0
+				if(((preA->isPositive() == true && preB->isPositive() == false) || (preA->isPositive() == false && preB->isPositive() == true)))
 				{
-					if (preA->variable[m].compare(preB->variable[m]) != 0)
-					{
-						same = false;
-						break;
-					}
-						
-				}
-				if (same == true)
-				{
-					bool haveUpper = false;
+					//have conflicts, judge whether they can be unified
+					//if two predicates are all the same
+					bool same = true;
 					for (int m = 0; m < preA->variable.size(); m++)
 					{
-						if (preA->variable[m][0] >= 'A' && preA->variable[m][0] <= 'Z')
-							haveUpper = true;
+						if (preA->variable[m].compare(preB->variable[m]) != 0)
+						{
+							same = false;
+							break;
+						}
+
 					}
-					if (haveUpper == false)
+					if (same == true)
 					{
-						same = false;
+						bool haveUpper = false;
+						for (int m = 0; m < preA->variable.size(); m++)
+						{
+							if (preA->variable[m][0] >= 'A' && preA->variable[m][0] <= 'Z')
+								haveUpper = true;
+						}
+						if (haveUpper == false)
+						{
+							same = false;
+						}
 					}
-				}
-				
-			
-				if(same == true)
-				{
-					haveResolution = true;
-					canResolve = true;
-					preVectorA.erase(preVectorA.begin() + i);
-					i--;
-					preVectorB.erase(preVectorB.begin() + j);
-					j--;
-					break;
-				}
-				replace = substitution(preA, preB);
-				if(!(replace[0].empty()&&replace[1].empty()))
-					canUnify = true;
-				if (canUnify == true)
-				{
-					haveResolution = true;
-					canResolve = true;
-					preVectorA.erase(preVectorA.begin() + i);
-					i--;
-					preVectorB.erase(preVectorB.begin() + j);
-					j--;
-					break;
+
+
+					if (same == true)
+					{
+						haveResolution = true;
+						canResolve = true;
+						preVectorA.erase(preVectorA.begin() + i);
+						i--;
+						preVectorB.erase(preVectorB.begin() + j);
+						//j--
+						for (auto& no : preNo)
+							no--;
+						break;
+					}
+					replace = substitution(preA, preB);
+					if (!(replace[0].empty() && replace[1].empty()))
+						canUnify = true;
+					if (canUnify == true)
+					{
+						haveResolution = true;
+						canResolve = true;
+						preVectorA.erase(preVectorA.begin() + i);
+						i--;
+						preVectorB.erase(preVectorB.begin() + j);
+						//j--;
+						for (auto& no : preNo)
+							no--;
+						break;
+					}
 				}
 			}
+
 		}
 		if (haveResolution == true)
 			break;
