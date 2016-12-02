@@ -94,7 +94,26 @@ vector<Clause*> Scan::sentenceToClause(string sentence)
 	convertToCNF(syntaxTree);
 	Clause* clause = new Clause();
 	treeToClauses(syntaxTree,clauses,clause);
-	clauses.push_back(clause);
+	vector<Predicate*> preVector = clause->getClausevector();
+	vector<Predicate*> tmpVector;	
+	for (int i = 0; i < preVector.size(); i++)
+	{
+		if (preVector[i]->name.compare("NULLPREDICATE") !=0 )
+		{
+			tmpVector.push_back(preVector[i]);
+		}
+		else
+		{
+			Clause* tmp = new Clause(tmpVector);
+			clauses.push_back(tmp);
+			tmpVector.clear();
+		}
+	}
+	Clause* tmp = new Clause(tmpVector);
+	clauses.push_back(tmp);
+	tmpVector.clear();
+
+	//clauses.push_back(clause);
 	return clauses;
 } 
 
@@ -328,8 +347,10 @@ void Scan::treeToClauses(TreeNode* syntaxTree,vector<Clause*>& clauses,Clause* c
 		}
 		if(syntaxTree->isOp == true && syntaxTree->optr == AND)
 		{
-			clauses.push_back(clause);
-			clause = new Clause();
+			
+			vector<string> var = { "i"};
+			Predicate* nullPre = new Predicate("NULLPREDICATE", var, true);
+			clause->addPredicate(nullPre);
 		}
 		treeToClauses(syntaxTree->child[1], clauses, clause);
 

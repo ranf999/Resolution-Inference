@@ -43,6 +43,6 @@ int main()
 		
 
 	file.writeFile("output.txt", output);
-	system("PAUSE");
+	//system("PAUSE");
 	return 0;
 }

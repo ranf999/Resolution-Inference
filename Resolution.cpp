@@ -17,7 +17,7 @@ bool Resolution::doResolution(vector<Clause* > KB, Clause* query, chrono::system
  			{
 				auto end = chrono::system_clock::now();
 				auto duration = chrono::duration_cast<chrono::seconds>(end - start);
-				if (duration.count() >= 29) return false;
+				//if (duration.count() >= 29) return false;
 				it = hasUsed.find(i);
 				if (it != hasUsed.end() && j <= hasUsed[i])
 					continue;
@@ -157,13 +157,8 @@ Clause* Resolution::resolve(Clause* A, Clause* B)
 {
 	vector<Predicate*> preVectorA = A->getClausevector();
 	vector<Predicate*> preVectorB = B->getClausevector();
-	//sort(preVectorA.begin(), preVectorA.end(), predicateCmp);
-	//sort(preVectorB.begin(), preVectorB.end(), predicateCmp);
-	//A->setClausevector(preVectorA);
-	//B->setClausevector(preVectorB);
 	int sizeA = preVectorA.size();
 	int sizeB = preVectorB.size();
-	//int n = sizeA < sizeB ? sizeA : sizeB;//????
 	bool canResolve = false;
 	vector<unordered_map<string, string> > replace;
 	//judge whether can be resolve
@@ -182,7 +177,6 @@ Clause* Resolution::resolve(Clause* A, Clause* B)
 				Predicate* preB = new Predicate();
 				preB = preVectorB[j];
 				bool canUnify = false;
-				//if (preA->getName().compare(preB->getName()) == 0
 				if(((preA->isPositive() == true && preB->isPositive() == false) || (preA->isPositive() == false && preB->isPositive() == true)))
 				{
 					//have conflicts, judge whether they can be unified
@@ -190,14 +184,14 @@ Clause* Resolution::resolve(Clause* A, Clause* B)
 					bool same = true;
 					for (int m = 0; m < preA->variable.size(); m++)
 					{
-						if (preA->variable[m].compare(preB->variable[m]) != 0)
+						if (preA->variable[m][0] < 'A'&&preA->variable[m][0]>'Z' &&preA->variable[m].compare(preB->variable[m]) != 0)
 						{
 							same = false;
 							break;
 						}
 
 					}
-					if (same == true)
+/*					if (same == true)
 					{
 						bool haveUpper = false;
 						for (int m = 0; m < preA->variable.size(); m++)
@@ -209,7 +203,7 @@ Clause* Resolution::resolve(Clause* A, Clause* B)
 						{
 							same = false;
 						}
-					}
+					}*/
 
 
 					if (same == true)
@@ -349,6 +343,18 @@ vector<unordered_map<string,string> > Resolution::substitution(Predicate* preA, 
 	unordered_map<string,string> replaceB;
 	vector<unordered_map<string,string> > mapVector(2);
 	//worth unify
+	bool allConstants = true;
+	for(int i = 0; i < argA.size(); i++)
+	{
+		if((argA[i][0] >= 'a' && argA[i][0] <= 'z')&&(argB[i][0] >= 'a'&&argB[i][0] <= 'z'))
+			allConstants = false;
+		if((argA[i][0] >= 'A' && argA[i][0] <= 'Z')&&(argB[i][0] >= 'A'&&argB[i][0] <= 'Z')&&argA[i].compare(argB[i])!=0)
+			allConstants = false;
+	}
+	if(allConstants == false) return mapVector;
+	
+	
+	
 	for(int i = 0; i < argA.size();i++)
 	{ 
 		if((argA[i][0] >= 'A' && argA[i][0] <= 'Z')&&(argB[i][0] >= 'a'&&argB[i][0] <= 'z'))
@@ -356,6 +362,9 @@ vector<unordered_map<string,string> > Resolution::substitution(Predicate* preA, 
 		if ((argB[i][0] >= 'A' && argB[i][0] <= 'Z') && (argA[i][0] >= 'a'&&argA[i][0] <= 'z'))
 			hasVal = true;
 	}
+
+	
+
 	if(hasVal==false) return mapVector;
 	unordered_map<string,int> hasHash;
 // subusititution generate
