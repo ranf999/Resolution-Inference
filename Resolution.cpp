@@ -184,7 +184,7 @@ Clause* Resolution::resolve(Clause* A, Clause* B)
 					bool same = true;
 					for (int m = 0; m < preA->variable.size(); m++)
 					{
-						if (preA->variable[m][0] < 'A'&&preA->variable[m][0]>'Z' &&preA->variable[m].compare(preB->variable[m]) != 0)
+						if ((preA->variable[m][0] < 'A'||preA->variable[m][0]>'Z' )||preA->variable[m].compare(preB->variable[m]) != 0)
 						{
 							same = false;
 							break;
@@ -347,8 +347,6 @@ vector<unordered_map<string,string> > Resolution::substitution(Predicate* preA, 
 	for(int i = 0; i < argA.size(); i++)
 	{
 		if((argA[i][0] >= 'a' && argA[i][0] <= 'z')&&(argB[i][0] >= 'a'&&argB[i][0] <= 'z'))
-			allConstants = false;
-		if((argA[i][0] >= 'A' && argA[i][0] <= 'Z')&&(argB[i][0] >= 'A'&&argB[i][0] <= 'Z')&&argA[i].compare(argB[i])!=0)
 			allConstants = false;
 	}
 	if(allConstants == false) return mapVector;
